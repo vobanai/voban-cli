@@ -75,7 +75,7 @@ func TestConfigureDoesNotPinDefaultModel(t *testing.T) {
 	}
 
 	if _, ok := readJSONFile(t, configPath)["model"]; ok {
-		t.Error("config pinned a default model; the user should pick via /model_name")
+		t.Error("config pinned a default model; the user should pick via /models")
 	}
 }
 

@@ -75,7 +75,7 @@ func runConfigure(ctx context.Context, args []string) error {
 	for _, m := range models {
 		fmt.Printf("  - %s\n", m)
 	}
-	fmt.Println("\nStart opencode and run /model_name to pick a Voban model.")
+	fmt.Println("\nStart opencode and run /models to pick a Voban model.")
 	return nil
 }
 
@@ -107,7 +107,7 @@ func runStatus(ctx context.Context) error {
 
 	me, err := c.Me(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("get identity: %w", err)
 	}
 	fmt.Printf("User:     %s\n", me.UserID)
 	if me.Email != "" {

@@ -30,7 +30,7 @@ This:
 3. Stores your key in opencode's `auth.json` (with `0600` permissions).
 
 It never overwrites unrelated opencode settings, and it does not pin a default
-model. Start opencode and run `/model_name` to pick a Voban model.
+model. Start opencode and run `/models` to pick a Voban model.
 
 ### Providing the key
 

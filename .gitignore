@@ -1,3 +1,5 @@
 /voban
 /dist/
 *.test
+.env
+.env.*
