@@ -61,7 +61,7 @@ func runConfigure(ctx context.Context, args []string) error {
 		return fmt.Errorf("unsupported tool %q (supported: opencode)", args[0])
 	}
 
-	key, err := resolveKey(false)
+	key, err := resolveKey()
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func runConfigure(ctx context.Context, args []string) error {
 }
 
 func runModels(ctx context.Context) error {
-	key, err := resolveKey(true)
+	key, err := resolveKey()
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func runModels(ctx context.Context) error {
 }
 
 func runStatus(ctx context.Context) error {
-	key, err := resolveKey(true)
+	key, err := resolveKey()
 	if err != nil {
 		return err
 	}
@@ -122,23 +122,20 @@ func runStatus(ctx context.Context) error {
 	return nil
 }
 
-// resolveKey finds the API key from VOBAN_API_KEY, then opencode's stored auth
-// (when reuseStored is set), then an interactive prompt. The key is validated
-// before it is returned.
-func resolveKey(reuseStored bool) (string, error) {
+// resolveKey finds the API key from VOBAN_API_KEY, then opencode's stored auth,
+// then an interactive prompt. The key is validated before it is returned.
+func resolveKey() (string, error) {
 	if key := strings.TrimSpace(os.Getenv("VOBAN_API_KEY")); key != "" {
 		return key, config.ValidateAPIKey(key)
 	}
-	if reuseStored {
-		key, ok, err := opencode.StoredKey()
-		if err != nil {
-			return "", fmt.Errorf("read stored opencode key: %w", err)
-		}
-		if ok {
-			return key, config.ValidateAPIKey(key)
-		}
+	key, ok, err := opencode.StoredKey()
+	if err != nil {
+		return "", fmt.Errorf("read stored opencode key: %w", err)
 	}
-	key, err := promptKey()
+	if ok {
+		return key, config.ValidateAPIKey(key)
+	}
+	key, err = promptKey()
 	if err != nil {
 		return "", err
 	}
