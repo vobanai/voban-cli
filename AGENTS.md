@@ -19,7 +19,7 @@ go test -race ./internal/opencode -run TestName      # single test
 
 - `cmd/voban/main.go` — entrypoint. Hand-rolled arg dispatch (`configure opencode` / `models` / `status`); **no cobra/flag library**. Key resolution: `VOBAN_API_KEY` -> stored opencode key -> interactive prompt.
 - `internal/config` — `BaseURL()` (env `VOBAN_BASE_URL`, default `https://api.voban.ai`) and `ValidateAPIKey` (must start with `sk-sov-`).
-- `internal/client` — minimal HTTP client for `GET /api/me`, `/api/me/spend`, `/v1/models`. Bearer auth.
+- `internal/client` — minimal HTTP client for `GET /v1/spend`, `/v1/models`. Bearer auth.
 - `internal/opencode` — writes opencode's `opencode.json` (provider) and `auth.json` (key).
 
 ## Gotchas (do not break)

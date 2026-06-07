@@ -27,15 +27,7 @@ func New(baseURL, apiKey string) *Client {
 	}
 }
 
-// Me is the identity and LiteLLM customer status from GET /api/me.
-type Me struct {
-	UserID         string `json:"user_id"`
-	Email          string `json:"email"`
-	CustomerExists bool   `json:"customer_exists"`
-	BudgetID       string `json:"budget_id"`
-}
-
-// Spend is the budget window and blocked state from GET /api/me/spend.
+// Spend is the budget window and blocked state from GET /v1/spend.
 type Spend struct {
 	UserID         string  `json:"user_id"`
 	Spend          float64 `json:"spend"`
@@ -45,17 +37,9 @@ type Spend struct {
 	Blocked        bool    `json:"blocked"`
 }
 
-func (c *Client) Me(ctx context.Context) (Me, error) {
-	var me Me
-	if err := c.getJSON(ctx, "/api/me", &me); err != nil {
-		return Me{}, err
-	}
-	return me, nil
-}
-
 func (c *Client) Spend(ctx context.Context) (Spend, error) {
 	var spend Spend
-	if err := c.getJSON(ctx, "/api/me/spend", &spend); err != nil {
+	if err := c.getJSON(ctx, "/v1/spend", &spend); err != nil {
 		return Spend{}, err
 	}
 	return spend, nil

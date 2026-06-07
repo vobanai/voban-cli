@@ -7,31 +7,13 @@ import (
 	"testing"
 )
 
-func TestMeReturnsIdentity(t *testing.T) {
+func TestSpendReturnsBudget(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if got := r.Header.Get("Authorization"); got != "Bearer sk-sov-key" {
 			t.Errorf("Authorization = %q, want Bearer sk-sov-key", got)
 		}
-		if r.URL.Path != "/api/me" {
-			t.Errorf("path = %q, want /api/me", r.URL.Path)
-		}
-		w.Write([]byte(`{"user_id":"u1","email":"a@b.c","customer_exists":true,"budget_id":"free"}`))
-	}))
-	defer srv.Close()
-
-	me, err := New(srv.URL, "sk-sov-key").Me(t.Context())
-	if err != nil {
-		t.Fatalf("Me() error: %v", err)
-	}
-	if me.UserID != "u1" || me.Email != "a@b.c" || !me.CustomerExists || me.BudgetID != "free" {
-		t.Errorf("unexpected Me result: %+v", me)
-	}
-}
-
-func TestSpendReturnsBudget(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/api/me/spend" {
-			t.Errorf("path = %q, want /api/me/spend", r.URL.Path)
+		if r.URL.Path != "/v1/spend" {
+			t.Errorf("path = %q, want /v1/spend", r.URL.Path)
 		}
 		w.Write([]byte(`{"user_id":"u1","spend":1.5,"max_budget":10,"blocked":false}`))
 	}))
@@ -41,7 +23,7 @@ func TestSpendReturnsBudget(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Spend() error: %v", err)
 	}
-	if spend.Spend != 1.5 || spend.MaxBudget != 10 || spend.Blocked {
+	if spend.UserID != "u1" || spend.Spend != 1.5 || spend.MaxBudget != 10 || spend.Blocked {
 		t.Errorf("unexpected Spend result: %+v", spend)
 	}
 }
@@ -87,7 +69,7 @@ func TestUnauthorizedSurfacesStatus(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	_, err := New(srv.URL, "sk-sov-key").Me(t.Context())
+	_, err := New(srv.URL, "sk-sov-key").Spend(t.Context())
 	if err == nil {
 		t.Fatal("expected error for 401 response")
 	}

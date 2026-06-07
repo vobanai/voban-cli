@@ -18,7 +18,7 @@ const usage = `voban configures AI coding tools to use the Voban gateway.
 Usage:
   voban configure opencode   Configure opencode to use Voban (writes opencode config)
   voban models               List the models available to your API key
-  voban status               Show your identity, budget, and spend
+  voban status               Show your budget and spend
 
 The API key is read from the VOBAN_API_KEY environment variable, from a prior
 configure run, or prompted interactively. Set VOBAN_BASE_URL to target a
@@ -105,20 +105,11 @@ func runStatus(ctx context.Context) error {
 	}
 	c := client.New(config.BaseURL(), key)
 
-	me, err := c.Me(ctx)
-	if err != nil {
-		return fmt.Errorf("get identity: %w", err)
-	}
-	fmt.Printf("User:     %s\n", me.UserID)
-	if me.Email != "" {
-		fmt.Printf("Email:    %s\n", me.Email)
-	}
-	fmt.Printf("Customer: %t\n", me.CustomerExists)
-
 	spend, err := c.Spend(ctx)
 	if err != nil {
 		return fmt.Errorf("get spend: %w", err)
 	}
+	fmt.Printf("User:     %s\n", spend.UserID)
 	fmt.Printf("Spend:    %.4f\n", spend.Spend)
 	if spend.MaxBudget > 0 {
 		fmt.Printf("Budget:   %.4f", spend.MaxBudget)

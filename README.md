@@ -48,7 +48,7 @@ VOBAN_API_KEY=sk-sov-... voban configure opencode
 
 ```bash
 voban models   # list the models available to your key
-voban status   # show your identity, budget, and spend
+voban status   # show your budget and spend
 ```
 
 ## Where opencode files are written

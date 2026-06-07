@@ -11,9 +11,7 @@ func TestRunStatusReturnsSpendError(t *testing.T) {
 	t.Setenv("VOBAN_API_KEY", "sk-sov-key")
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case "/api/me":
-			w.Write([]byte(`{"user_id":"u1","customer_exists":true}`))
-		case "/api/me/spend":
+		case "/v1/spend":
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(`{"error":{"message":"spend unavailable"}}`))
 		default:
