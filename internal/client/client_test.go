@@ -62,6 +62,37 @@ func TestModelsParsesOpenAIError(t *testing.T) {
 	}
 }
 
+func TestModelsMetadataReturnsEnrichedModels(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/models/metadata" {
+			t.Errorf("path = %q, want /v1/models/metadata", r.URL.Path)
+		}
+		w.Write([]byte(`{"object":"list","data":[{"id":"gpt-5.5","metadata_id":"openai/gpt-5.5","name":"GPT-5.5","reasoning":true,"reasoning_options":[{"type":"effort","values":["low","high"]}],"tool_call":true,"temperature":false,"limit":{"context":1050000,"output":128000}}]}`))
+	}))
+	defer srv.Close()
+
+	models, err := New(srv.URL, "sk-sov-key").ModelsMetadata(t.Context())
+	if err != nil {
+		t.Fatalf("ModelsMetadata() error: %v", err)
+	}
+	if len(models) != 1 {
+		t.Fatalf("expected 1 model, got %d", len(models))
+	}
+	m := models[0]
+	if m.ID != "gpt-5.5" || m.Name != "GPT-5.5" {
+		t.Fatalf("unexpected model: %+v", m)
+	}
+	if m.Reasoning == nil || !*m.Reasoning {
+		t.Fatalf("expected reasoning=true, got %v", m.Reasoning)
+	}
+	if len(m.ReasoningOptions) != 1 || m.ReasoningOptions[0].Type != "effort" {
+		t.Fatalf("unexpected reasoning options: %+v", m.ReasoningOptions)
+	}
+	if len(m.ReasoningOptions[0].Values) != 2 || m.ReasoningOptions[0].Values[0] != "low" || m.ReasoningOptions[0].Values[1] != "high" {
+		t.Fatalf("unexpected effort values: %v", m.ReasoningOptions[0].Values)
+	}
+}
+
 func TestUnauthorizedSurfacesStatus(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)

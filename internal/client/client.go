@@ -65,6 +65,52 @@ func (c *Client) Models(ctx context.Context) ([]string, error) {
 	return ids, nil
 }
 
+// ModelMetadata is the enriched model information from GET /v1/models/metadata,
+// sourced by the gateway from models.dev.
+type ModelMetadata struct {
+	ID               string            `json:"id"`
+	MetadataID       string            `json:"metadata_id,omitempty"`
+	Name             string            `json:"name"`
+	Family           string            `json:"family,omitempty"`
+	Attachment       *bool             `json:"attachment,omitempty"`
+	Reasoning        *bool             `json:"reasoning,omitempty"`
+	ReasoningOptions []ReasoningOption `json:"reasoning_options,omitempty"`
+	Temperature      *bool             `json:"temperature,omitempty"`
+	ToolCall         *bool             `json:"tool_call,omitempty"`
+	Limit            *ModelLimit       `json:"limit,omitempty"`
+	Modalities       *ModelModalities  `json:"modalities,omitempty"`
+}
+
+type ReasoningOption struct {
+	Type   string   `json:"type"`
+	Values []string `json:"values,omitempty"`
+	Min    *float64 `json:"min,omitempty"`
+	Max    *float64 `json:"max,omitempty"`
+}
+
+type ModelLimit struct {
+	Context float64  `json:"context"`
+	Input   *float64 `json:"input,omitempty"`
+	Output  float64  `json:"output"`
+}
+
+type ModelModalities struct {
+	Input  []string `json:"input,omitempty"`
+	Output []string `json:"output,omitempty"`
+}
+
+// ModelsMetadata returns enriched model metadata from GET /v1/models/metadata.
+// Falls back to nil if the endpoint is not available (older gateways).
+func (c *Client) ModelsMetadata(ctx context.Context) ([]ModelMetadata, error) {
+	var payload struct {
+		Data []ModelMetadata `json:"data"`
+	}
+	if err := c.getJSON(ctx, "/v1/models/metadata", &payload); err != nil {
+		return nil, err
+	}
+	return payload.Data, nil
+}
+
 func (c *Client) getJSON(ctx context.Context, path string, out any) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+path, nil)
 	if err != nil {

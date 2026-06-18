@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/vobanai/voban-cli/internal/client"
 )
 
 func writeConfigInputs(t *testing.T) (configPath, authPath string) {
@@ -26,10 +28,22 @@ func vobanProvider(t *testing.T, cfg map[string]any) map[string]any {
 	return voban
 }
 
+func boolPtr(v bool) *bool { return &v }
+
+func floatPtr(v float64) *float64 { return &v }
+
+func simpleModels(ids ...string) []client.ModelMetadata {
+	out := make([]client.ModelMetadata, len(ids))
+	for i, id := range ids {
+		out[i] = client.ModelMetadata{ID: id, Name: id}
+	}
+	return out
+}
+
 func TestConfigureWritesProviderBlock(t *testing.T) {
 	configPath, authPath := writeConfigInputs(t)
 
-	err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", []string{"glm-5.1", "devstral-2512"})
+	err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", simpleModels("glm-5.1", "devstral-2512"))
 	if err != nil {
 		t.Fatalf("writeOpenCodeConfig: %v", err)
 	}
@@ -51,7 +65,7 @@ func TestConfigureWritesProviderBlock(t *testing.T) {
 func TestConfigureRegistersDiscoveredModels(t *testing.T) {
 	configPath, authPath := writeConfigInputs(t)
 
-	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", []string{"glm-5.1", "devstral-2512"}); err != nil {
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", simpleModels("glm-5.1", "devstral-2512")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -70,7 +84,7 @@ func TestConfigureRegistersDiscoveredModels(t *testing.T) {
 func TestConfigureDoesNotPinDefaultModel(t *testing.T) {
 	configPath, authPath := writeConfigInputs(t)
 
-	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", []string{"glm-5.1"}); err != nil {
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", simpleModels("glm-5.1")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -82,7 +96,7 @@ func TestConfigureDoesNotPinDefaultModel(t *testing.T) {
 func TestConfigureWritesKeyToAuthNotConfig(t *testing.T) {
 	configPath, authPath := writeConfigInputs(t)
 
-	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-secret", []string{"glm-5.1"}); err != nil {
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-secret", simpleModels("glm-5.1")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -106,7 +120,7 @@ func TestConfigurePreservesUnrelatedConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", []string{"glm-5.1"}); err != nil {
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", simpleModels("glm-5.1")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -129,14 +143,14 @@ func TestConfigurePreservesUnrelatedConfig(t *testing.T) {
 func TestConfigureIsIdempotent(t *testing.T) {
 	configPath, authPath := writeConfigInputs(t)
 
-	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", []string{"glm-5.1"}); err != nil {
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", simpleModels("glm-5.1")); err != nil {
 		t.Fatal(err)
 	}
 	first, err := os.ReadFile(configPath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", []string{"glm-5.1"}); err != nil {
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", simpleModels("glm-5.1")); err != nil {
 		t.Fatal(err)
 	}
 	second, err := os.ReadFile(configPath)
@@ -151,10 +165,10 @@ func TestConfigureIsIdempotent(t *testing.T) {
 func TestConfigureReplacesStaleModelSet(t *testing.T) {
 	configPath, authPath := writeConfigInputs(t)
 
-	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", []string{"old-model"}); err != nil {
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", simpleModels("old-model")); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", []string{"glm-5.1"}); err != nil {
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", simpleModels("glm-5.1")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -164,5 +178,98 @@ func TestConfigureReplacesStaleModelSet(t *testing.T) {
 	}
 	if _, ok := models["glm-5.1"]; !ok {
 		t.Error("new model missing after reconfigure")
+	}
+}
+
+func TestConfigureWritesEnrichedMetadata(t *testing.T) {
+	configPath, authPath := writeConfigInputs(t)
+
+	models := []client.ModelMetadata{
+		{
+			ID:        "gpt-5.5",
+			Name:      "GPT-5.5",
+			Reasoning: boolPtr(true),
+			ReasoningOptions: []client.ReasoningOption{
+				{Type: "effort", Values: []string{"none", "low", "medium", "high", "xhigh"}},
+			},
+			Temperature: boolPtr(false),
+			ToolCall:    boolPtr(true),
+			Limit: &client.ModelLimit{
+				Context: 1_050_000,
+				Input:   floatPtr(922_000),
+				Output:  128_000,
+			},
+		},
+	}
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", models); err != nil {
+		t.Fatal(err)
+	}
+
+	entry := vobanProvider(t, readJSONFile(t, configPath))["models"].(map[string]any)["gpt-5.5"].(map[string]any)
+	if entry["name"] != "GPT-5.5" {
+		t.Fatalf("name = %v", entry["name"])
+	}
+	if entry["reasoning"] != true {
+		t.Errorf("reasoning = %v, want true", entry["reasoning"])
+	}
+	if entry["temperature"] != false {
+		t.Errorf("temperature = %v, want false", entry["temperature"])
+	}
+	if entry["tool_call"] != true {
+		t.Errorf("tool_call = %v, want true", entry["tool_call"])
+	}
+	limit := entry["limit"].(map[string]any)
+	if limit["context"] != float64(1_050_000) {
+		t.Errorf("limit.context = %v", limit["context"])
+	}
+	if limit["output"] != float64(128_000) {
+		t.Errorf("limit.output = %v", limit["output"])
+	}
+
+	variants := entry["variants"].(map[string]any)
+	if len(variants) != 5 {
+		t.Fatalf("expected 5 variants, got %d", len(variants))
+	}
+	high := variants["high"].(map[string]any)
+	if high["reasoningEffort"] != "high" {
+		t.Errorf("variant high reasoningEffort = %v", high["reasoningEffort"])
+	}
+}
+
+func TestConfigureOmitsVariantsForNonReasoningModel(t *testing.T) {
+	configPath, authPath := writeConfigInputs(t)
+
+	models := []client.ModelMetadata{
+		{ID: "devstral-2512", Name: "Devstral 2", Reasoning: boolPtr(false), ToolCall: boolPtr(true)},
+	}
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", models); err != nil {
+		t.Fatal(err)
+	}
+
+	entry := vobanProvider(t, readJSONFile(t, configPath))["models"].(map[string]any)["devstral-2512"].(map[string]any)
+	if _, hasVariants := entry["variants"]; hasVariants {
+		t.Error("expected no variants for non-reasoning model")
+	}
+}
+
+func TestConfigureOmitsVariantsForToggleOnlyReasoning(t *testing.T) {
+	configPath, authPath := writeConfigInputs(t)
+
+	models := []client.ModelMetadata{
+		{
+			ID:               "glm-5.1",
+			Name:             "GLM-5.1",
+			Reasoning:        boolPtr(true),
+			ReasoningOptions: []client.ReasoningOption{{Type: "toggle"}},
+			ToolCall:         boolPtr(true),
+		},
+	}
+	if err := writeOpenCodeConfig(configPath, authPath, "https://api.voban.ai/v1", "sk-sov-k", models); err != nil {
+		t.Fatal(err)
+	}
+
+	entry := vobanProvider(t, readJSONFile(t, configPath))["models"].(map[string]any)["glm-5.1"].(map[string]any)
+	if _, hasVariants := entry["variants"]; hasVariants {
+		t.Error("expected no variants for toggle-only reasoning model")
 	}
 }
