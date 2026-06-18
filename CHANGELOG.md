@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.6] - 2026-06-18
+
+### Added
+
+- `voban upgrade` command: downloads the latest GitHub release matching the
+  current platform, verifies its SHA-256 checksum against `checksums.txt`, and
+  atomically replaces the running binary. A `dev` build always upgrades.
+- New `internal/upgrade` package with semver comparison, asset selection and
+  atomic replace (Unix `rename(2)`; Windows renames the running exe to `.old`
+  first).
+
 ## [0.0.5] - 2026-06-18
 
 ### Added
@@ -61,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial `voban` CLI with `configure opencode`, `models`, and `status`
   commands targeting the Voban gateway.
 
+[0.0.6]: https://github.com/vobanai/voban-cli/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/vobanai/voban-cli/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/vobanai/voban-cli/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/vobanai/voban-cli/compare/v0.0.2...v0.0.3

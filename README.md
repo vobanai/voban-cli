@@ -51,6 +51,19 @@ voban models   # list the models available to your key
 voban status   # show your budget and spend
 ```
 
+### Upgrading
+
+`voban upgrade` downloads the latest release from GitHub, verifies its SHA-256
+checksum, and atomically replaces the running binary:
+
+```bash
+voban upgrade
+```
+
+It uses `os.Executable()` to locate itself, so it works regardless of where the
+binary was installed. A `dev` build (built from source without release ldflags)
+always upgrades to the latest tagged release.
+
 ## Where opencode files are written
 
 `voban` writes to opencode's global config and data directories. These follow

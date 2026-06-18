@@ -11,6 +11,7 @@ import (
 	"github.com/vobanai/voban-cli/internal/client"
 	"github.com/vobanai/voban-cli/internal/config"
 	"github.com/vobanai/voban-cli/internal/opencode"
+	"github.com/vobanai/voban-cli/internal/upgrade"
 	"github.com/vobanai/voban-cli/internal/version"
 )
 
@@ -20,6 +21,7 @@ Usage:
   voban configure opencode   Configure opencode to use Voban (writes opencode config)
   voban models               List the models available to your API key
   voban status               Show your budget and spend
+  voban upgrade              Upgrade voban to the latest release
   voban version              Show version information
 
 The API key is read from the VOBAN_API_KEY environment variable, from a prior
@@ -47,6 +49,8 @@ func run(ctx context.Context, args []string) error {
 		return runModels(ctx)
 	case "status":
 		return runStatus(ctx)
+	case "upgrade":
+		return runUpgrade(ctx)
 	case "version", "-v", "--version":
 		return runVersion()
 	case "help", "-h", "--help":
@@ -130,6 +134,10 @@ func runVersion() error {
 	v, commit, goos, goarch := version.Info()
 	fmt.Printf("voban %s (%s, %s/%s)\n", v, commit, goos, goarch)
 	return nil
+}
+
+func runUpgrade(ctx context.Context) error {
+	return upgrade.Run(ctx)
 }
 
 // resolveKey finds the API key from VOBAN_API_KEY, then opencode's stored auth,
