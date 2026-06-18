@@ -39,7 +39,11 @@ jobs:
           ext=""
           if [ "$GOOS" = "windows" ]; then ext=".exe"; fi
           out="voban-${GOOS}-${GOARCH}${ext}"
-          go build -trimpath -ldflags "-s -w" -o "$out" ./cmd/voban
+          version="${GITHUB_REF_NAME#v}"
+          commit="${GITHUB_SHA::7}"
+          go build -trimpath \
+            -ldflags "-s -w -X github.com/vobanai/voban-cli/internal/version.Version=${version} -X github.com/vobanai/voban-cli/internal/version.Commit=${commit}" \
+            -o "$out" ./cmd/voban
 
       - uses: actions/upload-artifact@v4
         with:

@@ -11,6 +11,7 @@ import (
 	"github.com/vobanai/voban-cli/internal/client"
 	"github.com/vobanai/voban-cli/internal/config"
 	"github.com/vobanai/voban-cli/internal/opencode"
+	"github.com/vobanai/voban-cli/internal/version"
 )
 
 const usage = `voban configures AI coding tools to use the Voban gateway.
@@ -19,6 +20,7 @@ Usage:
   voban configure opencode   Configure opencode to use Voban (writes opencode config)
   voban models               List the models available to your API key
   voban status               Show your budget and spend
+  voban version              Show version information
 
 The API key is read from the VOBAN_API_KEY environment variable, from a prior
 configure run, or prompted interactively. Set VOBAN_BASE_URL to target a
@@ -45,6 +47,8 @@ func run(ctx context.Context, args []string) error {
 		return runModels(ctx)
 	case "status":
 		return runStatus(ctx)
+	case "version", "-v", "--version":
+		return runVersion()
 	case "help", "-h", "--help":
 		fmt.Print(usage)
 		return nil
@@ -119,6 +123,12 @@ func runStatus(ctx context.Context) error {
 		fmt.Println()
 	}
 	fmt.Printf("Blocked:  %t\n", spend.Blocked)
+	return nil
+}
+
+func runVersion() error {
+	v, commit, goos, goarch := version.Info()
+	fmt.Printf("voban %s (%s, %s/%s)\n", v, commit, goos, goarch)
 	return nil
 }
 
